@@ -6,6 +6,7 @@ from nba_api.stats.static import players, teams
 
 file_name = "data2.csv"
 columns = [
+    #ADD MORE ABOUT THE OPPOSING TEAM
     'Player_ID', 'PLAYER_NAME', 'WL', 'MIN', 'POINTS', 'REBOUNDS', 'ASSISTS', 'STEALS', 'BLOCKS', 
     'PLUS_MINUS', 'TOV', 'FGM', 'FG_PCT', 'FG3M', 'FG3_PCT', 'FTM', 'FT_PCT', 'OPP_TEAM', 'COURT', 'BTB',
     'USG_PCT', 'TS_PCT', 'PER', 'POINTS_5GAME_AVG', 'REBOUNDS_5GAME_AVG', 'ASSISTS_5GAME_AVG', 'STEALS_5GAME_AVG', 
