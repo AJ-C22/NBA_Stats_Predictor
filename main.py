@@ -9,7 +9,7 @@ columns = [
     #ADD MORE ABOUT THE OPPOSING TEAM
     'Player_ID', 'PLAYER_NAME', 'WL', 'MIN', 'POINTS', 'REBOUNDS', 'ASSISTS', 'STEALS', 'BLOCKS', 
     'PLUS_MINUS', 'TOV', 'FGM', 'FG_PCT', 'FG3M', 'FG3_PCT', 'FTM', 'FT_PCT', 'OPP_TEAM', 'COURT', 'BTB',
-    'USG_PCT', 'TS_PCT', 'PER', 'POINTS_5GAME_AVG', 'REBOUNDS_5GAME_AVG', 'ASSISTS_5GAME_AVG', 'STEALS_5GAME_AVG', 
+    'USG_PCT', 'TS_PCT', 'PER', 'MINUTES_5GAME_AVG', 'POINTS_5GAME_AVG', 'REBOUNDS_5GAME_AVG', 'ASSISTS_5GAME_AVG', 'STEALS_5GAME_AVG', 
     'BLOCKS_5GAME_AVG'
 ]
 all_teams = teams.get_teams()
@@ -22,7 +22,7 @@ with open(file_name, "w", newline="") as f:
 active_players = players.get_active_players()
 player_ids = [player["id"] for player in active_players]
 
-for player_id in player_ids:
+for player_id in player_ids[:2]:
     try:
         player_info = players.find_player_by_id(player_id)
         player_name = player_info['full_name']
@@ -54,6 +54,7 @@ for player_id in player_ids:
         df['ASSISTS_5GAME_AVG'] = df['AST'].rolling(window=5).mean()
         df['STEALS_5GAME_AVG'] = df['STL'].rolling(window=5).mean()
         df['BLOCKS_5GAME_AVG'] = df['BLK'].rolling(window=5).mean()
+        df['MINUTES_5GAME_AVG'] = df['MIN'].rolling(window=5).mean()
 
         # Advanced stats (Usage Rate, True Shooting %, PER)
         df['USG_PCT'] = round((df['FGM'] + df['FTM'] + df['TOV']) / df['MIN'] * 100, 2)
