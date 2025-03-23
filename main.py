@@ -1,16 +1,16 @@
 import pandas as pd
 import csv
 import time
-from nba_api.stats.endpoints import PlayerGameLog, BoxScoreAdvancedV2
+from nba_api.stats.endpoints import PlayerGameLog, BoxScoreAdvancedV2, leaguedashteamstats, TeamEstimatedMetrics
 from nba_api.stats.static import players, teams
 
 file_name = "data2.csv"
 columns = [
     #ADD MORE ABOUT THE OPPOSING TEAM
-    'Player_ID', 'PLAYER_NAME', 'WL', 'MIN', 'POINTS', 'REBOUNDS', 'ASSISTS', 'STEALS', 'BLOCKS', 
-    'PLUS_MINUS', 'TOV', 'FGM', 'FG_PCT', 'FG3M', 'FG3_PCT', 'FTM', 'FT_PCT', 'OPP_TEAM', 'COURT', 'BTB',
-    'USG_PCT', 'TS_PCT', 'PER', 'MINUTES_5GAME_AVG', 'POINTS_5GAME_AVG', 'REBOUNDS_5GAME_AVG', 'ASSISTS_5GAME_AVG', 'STEALS_5GAME_AVG', 
-    'BLOCKS_5GAME_AVG'
+    'PLAYER_NAME', 'MIN', 'POINTS', 'REBOUNDS', 'ASSISTS', 'STEALS', 'BLOCKS', 
+    #'PLUS_MINUS', 'TOV', 'FGM', 'FG_PCT', 'FG3M', 'FG3_PCT', 'FTM', 'FT_PCT', 'TS_PCT', 'PER', 
+    'OPP_TEAM', 'COURT', 'BTB','USG_PCT', 
+    'MINUTES_5GAME_AVG', 'POINTS_5GAME_AVG', 'REBOUNDS_5GAME_AVG', 'ASSISTS_5GAME_AVG', 'STEALS_5GAME_AVG', 'BLOCKS_5GAME_AVG'
 ]
 all_teams = teams.get_teams()
 team_dict = {team['abbreviation']: team['id'] for team in all_teams}
@@ -36,14 +36,16 @@ for player_id in player_ids[:2]:
             continue  
 
         # Select necessary columns
-        df = df[['Game_ID','Player_ID', 'WL', 'MIN', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'PLUS_MINUS', 
-                 'TOV', 'FGM', 'FG_PCT', 'FG3M', 'FG3_PCT', 'FTM', 'FT_PCT', 'MATCHUP', 'GAME_DATE']]
+        df = df[['MIN', 'PTS', 'REB', 'AST', 'STL', 'BLK', 
+                 'TOV', 'FGM', 'FG_PCT', 'FG3M', 'FG3_PCT', 'FTM', 'FT_PCT', 
+                 'MATCHUP', 'GAME_DATE']]
 
         df['COURT'] = df['MATCHUP'].apply(lambda x: 'Home' if 'vs.' in x else 'Away')
         df[['TEAM', 'OPP_TEAM']] = df['MATCHUP'].str.split(r'vs\.|@', regex=True, expand=True).apply(lambda x: x.str.strip())
         team_info = df['TEAM'].apply(lambda x: teams.find_team_by_abbreviation(x))
         opp_team_info = df['OPP_TEAM'].apply(lambda x: teams.find_team_by_abbreviation(x))
-        print(team_info)
+        team_id = team_info['id']
+        opp_team_id = opp_team_info['id']
                 
 
         # Convert game date
@@ -73,6 +75,19 @@ for player_id in player_ids[:2]:
             'STL': 'STEALS', 
             'BLK': 'BLOCKS',
         }, inplace=True)
+
+        advStatsFinder = TeamEstimatedMetrics(season=season)
+        estStats = advStatsFinder.get_data_frames()[0]
+
+        estStats = estStats[['TEAM_ID', 'E_OFF_RATING', 'E_DEF_RATING', 'E_NET_RATING', 'E_PACE']]
+
+        advancedGamefinder = leaguedashteamstats.LeagueDashTeamStats(season=season)
+        teamStats = advancedGamefinder.get_data_frames()[0]
+
+        teamStats = teamStats[['TEAM_ID', 'TEAM_NAME', 'OREB_RANK', 'DREB_RANK', 'REB_RANK',  
+                            'AST_RANK', 'STL_RANK', 'BLK_RANK', 'PTS_RANK', 'PLUS_MINUS_RANK']]
+
+        merged_team_data = pd.merge(estStats, teamStats, on='TEAM_ID', how='inner')
 
         # Save to CSV
         df[columns].to_csv(file_name, mode="a", header=False, index=False)
