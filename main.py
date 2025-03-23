@@ -26,7 +26,6 @@ for player_id in player_ids[:2]:
     try:
         player_info = players.find_player_by_id(player_id)
         player_name = player_info['full_name']
-        
         # Fetch game logs
         time.sleep(1)
         season = "2023-24"
@@ -41,13 +40,17 @@ for player_id in player_ids[:2]:
                  'TOV', 'FGM', 'FG_PCT', 'FG3M', 'FG3_PCT', 'FTM', 'FT_PCT', 'MATCHUP', 'GAME_DATE']]
 
         df['COURT'] = df['MATCHUP'].apply(lambda x: 'Home' if 'vs.' in x else 'Away')
-        df['OPP_TEAM'] = df['MATCHUP'].str.split('vs.|@').str[1].str.strip()
+        df[['TEAM', 'OPP_TEAM']] = df['MATCHUP'].str.split(r'vs\.|@', regex=True, expand=True).apply(lambda x: x.str.strip())
+        team_info = df['TEAM'].apply(lambda x: teams.find_team_by_abbreviation(x))
+        opp_team_info = df['OPP_TEAM'].apply(lambda x: teams.find_team_by_abbreviation(x))
+        print(team_info)
+                
 
         # Convert game date
         df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE'], format='%b %d, %Y')
         df['NEXT_GAME_DATE'] = df['GAME_DATE'].shift(-1)
         df['BTB'] = (df['GAME_DATE'] - df['NEXT_GAME_DATE']).dt.days == 1
-        
+    
         # Calculate Rolling Averages for the last 5 games
         df['POINTS_5GAME_AVG'] = df['PTS'].rolling(window=5).mean()
         df['REBOUNDS_5GAME_AVG'] = df['REB'].rolling(window=5).mean()
