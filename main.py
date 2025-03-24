@@ -6,12 +6,23 @@ from nba_api.stats.static import players, teams
 
 file_name = "data2.csv"
 columns = [
-    #ADD MORE ABOUT THE OPPOSING TEAM
+    # Player stats
     'PLAYER_NAME', 'MIN', 'POINTS', 'REBOUNDS', 'ASSISTS', 'STEALS', 'BLOCKS', 
-    #'PLUS_MINUS', 'TOV', 'FGM', 'FG_PCT', 'FG3M', 'FG3_PCT', 'FTM', 'FT_PCT', 'TS_PCT', 'PER', 
-    'OPP_TEAM', 'COURT', 'BTB','USG_PCT', 
-    'MINUTES_5GAME_AVG', 'POINTS_5GAME_AVG', 'REBOUNDS_5GAME_AVG', 'ASSISTS_5GAME_AVG', 'STEALS_5GAME_AVG', 'BLOCKS_5GAME_AVG'
+    'USG_PCT', 'MINUTES_5GAME_AVG', 'POINTS_5GAME_AVG', 'REBOUNDS_5GAME_AVG', 
+    'ASSISTS_5GAME_AVG', 'STEALS_5GAME_AVG', 'BLOCKS_5GAME_AVG',
+    
+    # Opponent and game context
+    'OPP_TEAM', 'COURT', 'BTB', 
+    
+    # Player's team stats
+    'TEAM_E_OFF_RATING', 'TEAM_E_DEF_RATING', 'TEAM_E_NET_RATING', 'TEAM_E_PACE',
+    'TEAM_AST_RANK', 'TEAM_STL_RANK', 'TEAM_BLK_RANK', 'TEAM_PTS_RANK', 'TEAM_PLUS_MINUS_RANK',
+    
+    # Opponent's team stats
+    'OPP_E_OFF_RATING', 'OPP_E_DEF_RATING', 'OPP_E_NET_RATING', 'OPP_E_PACE',
+    'OPP_AST_RANK', 'OPP_STL_RANK', 'OPP_BLK_RANK', 'OPP_PTS_RANK', 'OPP_PLUS_MINUS_RANK'
 ]
+
 all_teams = teams.get_teams()
 team_dict = {team['abbreviation']: team['id'] for team in all_teams}
 
@@ -44,8 +55,15 @@ for player_id in player_ids[:2]:
         df[['TEAM', 'OPP_TEAM']] = df['MATCHUP'].str.split(r'vs\.|@', regex=True, expand=True).apply(lambda x: x.str.strip())
         team_info = df['TEAM'].apply(lambda x: teams.find_team_by_abbreviation(x))
         opp_team_info = df['OPP_TEAM'].apply(lambda x: teams.find_team_by_abbreviation(x))
-        team_id = team_info['id']
-        opp_team_id = opp_team_info['id']
+        df['TEAM_ID'] = team_info.apply(lambda x: x['id'] if isinstance(x, dict) else None)
+        df['OPP_TEAM_ID'] = opp_team_info.apply(lambda x: x['id'] if isinstance(x, dict) else None)
+
+        team_info = teams.find_team_by_abbreviation(df['TEAM'].iloc[0])  
+        opp_team_info = teams.find_team_by_abbreviation(df['OPP_TEAM'].iloc[0])  
+        print(team_info)
+        team_id = team_info['id'] if team_info else None
+        opp_team_id = opp_team_info['id'] if opp_team_info else None
+        
                 
 
         # Convert game date
@@ -75,7 +93,10 @@ for player_id in player_ids[:2]:
             'STL': 'STEALS', 
             'BLK': 'BLOCKS',
         }, inplace=True)
+     
+     # ------------------------------------
 
+     
         advStatsFinder = TeamEstimatedMetrics(season=season)
         estStats = advStatsFinder.get_data_frames()[0]
 
@@ -89,7 +110,44 @@ for player_id in player_ids[:2]:
 
         merged_team_data = pd.merge(estStats, teamStats, on='TEAM_ID', how='inner')
 
-        # Save to CSV
+        teamFinalStats = merged_team_data
+        teamFinalStats = teamFinalStats.rename(columns={
+            'E_OFF_RATING': 'TEAM_E_OFF_RATING', 
+            'E_DEF_RATING': 'TEAM_E_DEF_RATING', 
+            'E_NET_RATING': 'TEAM_E_NET_RATING', 
+            'E_PACE': 'TEAM_E_PACE',
+            'OREB_RANK': 'TEAM_OREB_RANK', 
+            'DREB_RANK': 'TEAM_DREB_RANK', 
+            'REB_RANK': 'TEAM_REB_RANK',  
+            'AST_RANK': 'TEAM_AST_RANK', 
+            'STL_RANK': 'TEAM_STL_RANK', 
+            'BLK_RANK': 'TEAM_BLK_RANK', 
+            'PTS_RANK': 'TEAM_PTS_RANK', 
+            'PLUS_MINUS_RANK': 'TEAM_PLUS_MINUS_RANK'
+        })
+        oppTeamFinalStats = merged_team_data
+        oppTeamFinalStats = oppTeamFinalStats.rename(columns={
+            'E_OFF_RATING': 'OPP_E_OFF_RATING', 
+            'E_DEF_RATING': 'OPP_E_DEF_RATING', 
+            'E_NET_RATING': 'OPP_E_NET_RATING', 
+            'E_PACE': 'OPP_E_PACE',
+            'OREB_RANK': 'OPP_OREB_RANK', 
+            'DREB_RANK': 'OPP_DREB_RANK', 
+            'REB_RANK': 'OPP_REB_RANK',  
+            'AST_RANK': 'OPP_AST_RANK', 
+            'STL_RANK': 'OPP_STL_RANK', 
+            'BLK_RANK': 'OPP_BLK_RANK', 
+            'PTS_RANK': 'OPP_PTS_RANK', 
+            'PLUS_MINUS_RANK': 'OPP_PLUS_MINUS_RANK'
+        })
+    
+        print(opp_team_id)
+
+    # -------------------------------------
+        df = df.merge(teamFinalStats, left_on='TEAM_ID', right_on='TEAM_ID', how='left')
+        df = df.merge(oppTeamFinalStats, left_on='OPP_TEAM_ID', right_on='TEAM_ID', how='left')
+
+    # ---------------------------------------
         df[columns].to_csv(file_name, mode="a", header=False, index=False)
 
         print(f"PLAYER {player_name} DONE")

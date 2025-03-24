@@ -6,18 +6,18 @@ estStats = advStatsFinder.get_data_frames()[0]
 
 estStats = estStats[['TEAM_ID', 'E_OFF_RATING', 'E_DEF_RATING', 'E_NET_RATING', 'E_PACE']]
 
-
 advancedGamefinder = leaguedashteamstats.LeagueDashTeamStats(season='2024-25')
 teamStats = advancedGamefinder.get_data_frames()[0]
-
-print("Available columns in LeagueDashTeamStats:", teamStats.columns)
 
 teamStats = teamStats[['TEAM_ID', 'TEAM_NAME', 'OREB_RANK', 'DREB_RANK', 'REB_RANK',  
                        'AST_RANK', 'STL_RANK', 'BLK_RANK', 'PTS_RANK', 'PLUS_MINUS_RANK']]
 
 merged_team_data = pd.merge(estStats, teamStats, on='TEAM_ID', how='inner')
 
+team_id = 1610612737  
+
+teamFinalStats = merged_team_data[merged_team_data['TEAM_ID'] == team_id]
 
 csv_filename = "team_stats.csv"
-merged_team_data.to_csv(csv_filename, index=False)
+teamFinalStats.to_csv(csv_filename, index=False)
 print(f"Saved team statistics to {csv_filename}")
