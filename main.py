@@ -7,20 +7,20 @@ from nba_api.stats.static import players, teams
 file_name = "data2.csv"
 columns = [
     # Player stats
-    'PLAYER_NAME', 'MIN', 'POINTS', 'REBOUNDS', 'ASSISTS', 'STEALS', 'BLOCKS', 
-    'USG_PCT', 'MINUTES_5GAME_AVG', 'POINTS_5GAME_AVG', 'REBOUNDS_5GAME_AVG', 
-    'ASSISTS_5GAME_AVG', 'STEALS_5GAME_AVG', 'BLOCKS_5GAME_AVG',
+    'PLAYER_NAME', 'MIN', 'POINTS', 'REBOUNDS', 'ASSISTS', 'STEALS', 'BLOCKS', 'USG_PCT', 
+    
+    # Player rolling averages
+    'MINUTES_5GAME_AVG', 'POINTS_5GAME_AVG', 'REBOUNDS_5GAME_AVG', 'ASSISTS_5GAME_AVG', 
+    'STEALS_5GAME_AVG', 'BLOCKS_5GAME_AVG',
     
     # Opponent and game context
     'OPP_TEAM', 'COURT', 'BTB', 
     
     # Player's team stats
-    'TEAM_E_OFF_RATING', 'TEAM_E_DEF_RATING', 'TEAM_E_NET_RATING', 'TEAM_E_PACE',
-    'TEAM_AST_RANK', 'TEAM_STL_RANK', 'TEAM_BLK_RANK', 'TEAM_PTS_RANK', 'TEAM_PLUS_MINUS_RANK',
+    'TEAM_E_OFF_RATING', 'TEAM_E_DEF_RATING', 'TEAM_E_PACE'
     
     # Opponent's team stats
-    'OPP_E_OFF_RATING', 'OPP_E_DEF_RATING', 'OPP_E_NET_RATING', 'OPP_E_PACE',
-    'OPP_AST_RANK', 'OPP_STL_RANK', 'OPP_BLK_RANK', 'OPP_PTS_RANK', 'OPP_PLUS_MINUS_RANK'
+    'OPP_E_OFF_RATING', 'OPP_E_DEF_RATING', 'OPP_E_PACE'
 ]
 
 all_teams = teams.get_teams()
