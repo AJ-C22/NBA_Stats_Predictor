@@ -4,7 +4,7 @@ import time
 from nba_api.stats.endpoints import PlayerGameLog, BoxScoreAdvancedV2, leaguedashteamstats, TeamEstimatedMetrics
 from nba_api.stats.static import players, teams
 
-file_name = "data2.csv"
+file_name = "2023-2024_pt3.csv"
 columns = [
     # Player stats
     'PLAYER_NAME', 'MIN', 'POINTS', 'REBOUNDS', 'ASSISTS', 'STEALS', 'BLOCKS', 'USG_PCT', 
@@ -17,7 +17,7 @@ columns = [
     'OPP_TEAM', 'COURT', 'BTB', 
     
     # Player's team stats
-    'TEAM_E_OFF_RATING', 'TEAM_E_DEF_RATING', 'TEAM_E_PACE'
+    'TEAM_E_OFF_RATING', 'TEAM_E_DEF_RATING', 'TEAM_E_PACE',
     
     # Opponent's team stats
     'OPP_E_OFF_RATING', 'OPP_E_DEF_RATING', 'OPP_E_PACE'
@@ -32,13 +32,14 @@ with open(file_name, "w", newline="") as f:
 
 active_players = players.get_active_players()
 player_ids = [player["id"] for player in active_players]
-
-for player_id in player_ids[:2]:
+count = 0
+for player_id in player_ids:
     try:
+        count += 1
         player_info = players.find_player_by_id(player_id)
         player_name = player_info['full_name']
-        # Fetch game logs
-        time.sleep(1)
+        
+        time.sleep(3)
         season = "2023-24"
         game_log = PlayerGameLog(player_id=player_id, season=season)
         df = game_log.get_data_frames()[0]
@@ -60,7 +61,6 @@ for player_id in player_ids[:2]:
 
         team_info = teams.find_team_by_abbreviation(df['TEAM'].iloc[0])  
         opp_team_info = teams.find_team_by_abbreviation(df['OPP_TEAM'].iloc[0])  
-        print(team_info)
         team_id = team_info['id'] if team_info else None
         opp_team_id = opp_team_info['id'] if opp_team_info else None
         
@@ -95,8 +95,7 @@ for player_id in player_ids[:2]:
         }, inplace=True)
      
      # ------------------------------------
-
-     
+        
         advStatsFinder = TeamEstimatedMetrics(season=season)
         estStats = advStatsFinder.get_data_frames()[0]
 
@@ -114,34 +113,15 @@ for player_id in player_ids[:2]:
         teamFinalStats = teamFinalStats.rename(columns={
             'E_OFF_RATING': 'TEAM_E_OFF_RATING', 
             'E_DEF_RATING': 'TEAM_E_DEF_RATING', 
-            'E_NET_RATING': 'TEAM_E_NET_RATING', 
             'E_PACE': 'TEAM_E_PACE',
-            'OREB_RANK': 'TEAM_OREB_RANK', 
-            'DREB_RANK': 'TEAM_DREB_RANK', 
-            'REB_RANK': 'TEAM_REB_RANK',  
-            'AST_RANK': 'TEAM_AST_RANK', 
-            'STL_RANK': 'TEAM_STL_RANK', 
-            'BLK_RANK': 'TEAM_BLK_RANK', 
-            'PTS_RANK': 'TEAM_PTS_RANK', 
-            'PLUS_MINUS_RANK': 'TEAM_PLUS_MINUS_RANK'
+   
         })
         oppTeamFinalStats = merged_team_data
         oppTeamFinalStats = oppTeamFinalStats.rename(columns={
             'E_OFF_RATING': 'OPP_E_OFF_RATING', 
             'E_DEF_RATING': 'OPP_E_DEF_RATING', 
-            'E_NET_RATING': 'OPP_E_NET_RATING', 
             'E_PACE': 'OPP_E_PACE',
-            'OREB_RANK': 'OPP_OREB_RANK', 
-            'DREB_RANK': 'OPP_DREB_RANK', 
-            'REB_RANK': 'OPP_REB_RANK',  
-            'AST_RANK': 'OPP_AST_RANK', 
-            'STL_RANK': 'OPP_STL_RANK', 
-            'BLK_RANK': 'OPP_BLK_RANK', 
-            'PTS_RANK': 'OPP_PTS_RANK', 
-            'PLUS_MINUS_RANK': 'OPP_PLUS_MINUS_RANK'
         })
-    
-        print(opp_team_id)
 
     # -------------------------------------
         df = df.merge(teamFinalStats, left_on='TEAM_ID', right_on='TEAM_ID', how='left')
@@ -149,8 +129,10 @@ for player_id in player_ids[:2]:
 
     # ---------------------------------------
         df[columns].to_csv(file_name, mode="a", header=False, index=False)
-
-        print(f"PLAYER {player_name} DONE")
+        
+        print(f"{count}: PLAYER {player_name} DONE")
     
     except Exception as e:
         print(f"Error for {player_name}: {e}")
+        player_ids.append(player_id)
+        time.sleep(30)

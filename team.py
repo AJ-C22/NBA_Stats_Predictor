@@ -1,23 +1,10 @@
 import pandas as pd
 from nba_api.stats.endpoints import leaguedashteamstats, TeamEstimatedMetrics
 
-advStatsFinder = TeamEstimatedMetrics(season="2023-24")
-estStats = advStatsFinder.get_data_frames()[0]
+df1 = pd.read_csv('2023-2024_pt1.csv')
+df2 = pd.read_csv('2023-2024_pt2.csv')
+df3 = pd.read_csv('2023-2024_pt3.csv')
 
-estStats = estStats[['TEAM_ID', 'E_OFF_RATING', 'E_DEF_RATING', 'E_NET_RATING', 'E_PACE']]
+merged_df = pd.concat([df1, df2, df3], axis=0, ignore_index=True)
 
-advancedGamefinder = leaguedashteamstats.LeagueDashTeamStats(season='2024-25')
-teamStats = advancedGamefinder.get_data_frames()[0]
-
-teamStats = teamStats[['TEAM_ID', 'TEAM_NAME', 'OREB_RANK', 'DREB_RANK', 'REB_RANK',  
-                       'AST_RANK', 'STL_RANK', 'BLK_RANK', 'PTS_RANK', 'PLUS_MINUS_RANK']]
-
-merged_team_data = pd.merge(estStats, teamStats, on='TEAM_ID', how='inner')
-
-team_id = 1610612737  
-
-teamFinalStats = merged_team_data[merged_team_data['TEAM_ID'] == team_id]
-
-csv_filename = "team_stats.csv"
-teamFinalStats.to_csv(csv_filename, index=False)
-print(f"Saved team statistics to {csv_filename}")
+merged_df.to_csv('2023-2024.csv', index=False)
